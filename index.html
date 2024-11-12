@@ -1,8 +1,811 @@
-<html>
-<title>这是一个测试页面</title>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 图像生成工具</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00a8ff;
+            --accent-color: #0051ff;
+            --dark-bg: #0a0e17;
+            --card-bg: #151b26;
+            --text-color: #e0e0e0;
+            --text-secondary: #8b8b8b;
+            --border-color: #1e2738;
+            --hover-color: #1d2433;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--dark-bg);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 导航栏式 */
+        header {
+            background: rgba(21, 24, 32, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            margin: 0 auto 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo {
+            color: #00a8ff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(0, 168, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 2.5rem;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem 1.5rem;
+            border-radius: 16px;
+        }
+
+        .nav-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .nav-btn:hover {
+            color: #00a8ff;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.secondary {
+            color: var(--text-color);
+        }
+
+        .nav-btn.secondary:hover {
+            color: #00a8ff;
+            background: rgba(0, 168, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-btn {
+            padding: 0.7rem 1.8rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: linear-gradient(45deg, #00a8ff, #0051ff);
+            color: white;
+            border: none;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.3);
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        /* 提示词输入区 */
+        .prompt-section {
+            width: 100%;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .prompt-input {
+            width: 100%;
+            height: 150px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            resize: vertical;
+            font-size: 1rem;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .prompt-input:focus {
+            border-color: #00a8ff;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.1);
+            outline: none;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #00a8ff, #0051ff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0051ff, #00a8ff);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .generate-btn:hover::before {
+            opacity: 1;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 图片展示区域 */
+        .gallery-section {
+            width: 100%;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .gallery-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: var(--dark-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .tab.active {
+            background: #00a8ff;
+            color: var(--dark-bg);
+            border-color: #00a8ff;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .image-card {
+            position: relative;
+            aspect-ratio: 1;
+            background: var(--dark-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            min-height: 250px;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .generating {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--dark-bg);
+            border-top: 3px solid #00a8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 页脚样式 */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+        }
+
+        .faq-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+        }
+
+        .faq-title {
+            color: #00a8ff;
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .faq-grid {
+            display: grid;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question {
+            padding: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #00a8ff;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .faq-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-answer {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--text-secondary);
+        }
+
+        .faq-item.active .faq-answer {
+            padding: 1.2rem;
+            max-height: 500px;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 213, 0.1);
+        }
+
+        /* 添加新的样式 */
+        .prompt-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .style-select {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--dark-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .style-select:focus {
+            border-color: #00a8ff;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.1);
+            outline: none;
+        }
+
+        .image-settings {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(21, 24, 32, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-item label {
+            font-size: 0.9rem;
+            color: #00a8ff;
+        }
+
+        .setting-item input[type="range"] {
+            flex: 1;
+            background: var(--dark-bg);
+            height: 4px;
+            -webkit-appearance: none;
+        }
+
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00a8ff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+        }
+
+        .setting-item input[type="number"] {
+            width: 60px;
+            padding: 0.3rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--dark-bg);
+            color: var(--text-color);
+        }
+
+        .prompt-examples {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .prompt-tag {
+            padding: 0.3rem 0.8rem;
+            background: rgba(0, 168, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 168, 255, 0.2);
+            color: #00a8ff;
+        }
+
+        .prompt-tag:hover {
+            background: #00a8ff;
+            color: var(--dark-bg);
+        }
+
+        .gallery-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-option {
+            padding: 0.5rem;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .image-card {
+            position: relative;
+        }
+
+        .image-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            background: rgba(10, 11, 15, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .image-card:hover .image-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 0.3rem 0.6rem;
+            background: transparent;
+            border: 1px solid #00a8ff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #00a8ff;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #00a8ff;
+            color: var(--dark-bg);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: var(--dark-bg);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00a8ff, #0051ff);
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00a8ff;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00a8ff;
+        }
+
+        /* 新增霓虹灯效果 */
+        .neon-border {
+            position: relative;
+        }
+
+        .neon-border::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: inherit;
+            background: linear-gradient(45deg, #00a8ff, #0051ff);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .neon-border:hover::after {
+            opacity: 0.5;
+        }
+
+        /* 输入框光晕效果 */
+        .prompt-input:focus {
+            box-shadow: 0 0 20px rgba(0, 168, 255, 0.1);
+        }
+
+        /* 设置控件样式更新 */
+        .setting-item input[type="range"] {
+            background: var(--dark-bg);
+            height: 4px;
+            -webkit-appearance: none;
+        }
+
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00a8ff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+        }
+
+        .setting-item input[type="number"] {
+            background: var(--dark-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Home链接样式 */
+        .nav-btn.home {
+            color: #fff;
+        }
+
+        .nav-btn.home:hover {
+            color: #00a8ff;
+            transform: translateY(-2px);
+        }
+
+        /* Price链接样式 */
+        .nav-btn.primary {
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+        }
+
+        .nav-btn.primary:hover {
+            color: #00a8ff;
+            border-color: rgba(0, 168, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 激活状态样式 */
+        .nav-btn.active {
+            position: relative;
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%;
+            height: 2px;
+            background: #00a8ff;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.5);
+        }
+    </style>
+</head>
 <body>
-<h1>
-    这是一个测试页面
-</h1>
+    <div class="container">
+        <header>
+            <nav class="nav">
+                <div class="logo">AI Image Generator</div>
+                <div class="nav-center">
+                    <a href="index.html" class="nav-btn active">Home</a>
+                    <a href="pricing.html" class="nav-btn">Price</a>
+                </div>
+                <a href="#login" class="login-btn">Login</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <section class="prompt-section">
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">图像生成</h2>
+                
+                <div class="prompt-controls">
+                    <select class="style-select">
+                        <option value="">选择艺术风格</option>
+                        <option value="realistic">写实风格</option>
+                        <option value="anime">动漫风格</option>
+                        <option value="oil">油画风格</option>
+                        <option value="watercolor">水彩风格</option>
+                    </select>
+                    <select class="style-select">
+                        <option value="">选择场景类型</option>
+                        <option value="portrait">人物肖像</option>
+                        <option value="landscape">风景</option>
+                        <option value="abstract">抽象</option>
+                        <option value="architecture">建筑</option>
+                    </select>
+                </div>
+
+                <textarea class="prompt-input" placeholder="请输入详细的图片描述...&#10;例如：一个年轻女孩在樱花树下看书，阳光透过树叶洒在她身上，整体氛围温馨浪漫。"></textarea>
+                
+                <div class="prompt-examples">
+                    <div class="prompt-tag">阳光明媚</div>
+                    <div class="prompt-tag">黄昏日落</div>
+                    <div class="prompt-tag">梦幻童话</div>
+                    <div class="prompt-tag">科技未来</div>
+                    <div class="prompt-tag">复古怀旧</div>
+                </div>
+
+                <div class="image-settings">
+                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">图像设置</h3>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label>图像数量</label>
+                            <input type="number" min="1" max="10" value="4">
+                        </div>
+                        <div class="setting-item">
+                            <label>图像质量</label>
+                            <input type="range" min="1" max="100" value="80">
+                        </div>
+                        <div class="setting-item">
+                            <label>宽度</label>
+                            <select class="style-select">
+                                <option value="512">512px</option>
+                                <option value="768">768px</option>
+                                <option value="1024">1024px</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>高度</label>
+                            <select class="style-select">
+                                <option value="512">512px</option>
+                                <option value="768">768px</option>
+                                <option value="1024">1024px</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="generate-btn">开始生成</button>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </section>
+        </main>
+
+        <section class="gallery-section">
+            <div class="gallery-controls">
+                <div class="gallery-tabs">
+                    <div class="tab active">正在生成</div>
+                    <div class="tab">已生成</div>
+                </div>
+                <div class="view-options">
+                    <div class="view-option">网格视图</div>
+                    <div class="view-option">列表视图</div>
+                </div>
+            </div>
+            <div class="gallery-grid">
+                <div class="image-card">
+                    <div class="generating">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/200" alt="生成的图片">
+                    <div class="image-actions">
+                        <button class="action-btn">下载</button>
+                        <button class="action-btn">分享</button>
+                        <button class="action-btn">编辑</button>
+                    </div>
+                </div>
+                <!-- 其他图片卡片 -->
+            </div>
+        </section>
+
+        <section class="faq-section">
+            <h2 class="faq-title">常见问题</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>如何写出好的提示词？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        建议从以下几个方面描述：画面主体、景环境、光线氛围、艺术风格、构图方式等。描述越详细，生成的图像越符合预期。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>生成图片需要多长时间？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        通常一张图片的生成时间在10-30秒之间，具体取决于服务器负载和图片的复杂程度。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>生成的图片可以商用吗？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        生成的图片版权归属需要参考具体的服务条款。建议在商用前仔细阅读相关协议，必要时请联系客服确认。
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>如何提高生成图片的质量？</span>
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        可以在提示词中添加一些质量相关的关键词，如：高清、4K、细节丰富、精致等。同时避免模糊或矛盾的描述。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2024 AI Image Generator | 所有图片由 AI 成</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                本工具仅供学习研究使用，请遵守相关法律法规
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // FAQ 交互功能
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                faqItem.classList.toggle('active');
+            });
+        });
+    </script>
 </body>
 </html>
